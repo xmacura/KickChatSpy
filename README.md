@@ -1,0 +1,21 @@
+# KickChatSpy
+
+**KickChatSpy** is a lightweight C# library for listening to live chat messages from [Kick.com](https://kick.com) using WebSocket connection.
+
+
+## Example
+
+```csharp
+var kickChat = new KickChatSpy();
+
+kickChat.OnMessageReceived += (msg) =>
+{
+    Console.WriteLine($"[{msg.CreatedAt:T}] {msg.Sender.Username}: {msg.Content}");
+};
+
+var chatroomId = 692373;
+await kickChat.ConnectToChatroomAsync(chatroomId);
+
+## License
+
+[MIT License](LICENSE)
