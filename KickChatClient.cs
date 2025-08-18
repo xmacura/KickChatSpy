@@ -5,7 +5,7 @@ using KickChatSpy.Models;
 
 namespace KickChatSpy;
 
-public class KickChatSpy
+public class KickChatClient
 {
     private static readonly Uri WebSocketUri = new("wss://ws-us2.pusher.com/app/32cbd69e4b950bf97679");
 
