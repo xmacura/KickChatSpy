@@ -11,9 +11,23 @@ public class KickChatSpy
 
     private ClientWebSocket _ws;
     private CancellationTokenSource _cts;
+    private readonly ChatroomLookupService _lookupService = new();
 
     public bool IsConnected => _ws != null && _ws.State == WebSocketState.Open;
     public event Action<ChatMessage> OnMessageReceived;
+    
+    public async Task ConnectToChatroomAsync(string channelname)
+    {
+        if (string.IsNullOrWhiteSpace(channelname))
+            throw new ArgumentException("Channel name is required.", nameof(channelname));
+
+        var chatroomId = await _lookupService.GetChatroomIdAsync(channelname);
+        if (!chatroomId.HasValue)
+            throw new InvalidOperationException($"Chatroom '{channelname}' not found.");
+
+        Console.WriteLine($"Found chatroom ID: {chatroomId.Value} for channel '{channelname}'");
+        await ConnectToChatroomAsync(chatroomId.Value);
+    }
 
     public async Task ConnectToChatroomAsync(long chatroomNumber)
     {
@@ -24,7 +38,7 @@ public class KickChatSpy
         _cts = new CancellationTokenSource();
 
         await _ws.ConnectAsync(WebSocketUri, _cts.Token);
-        Console.WriteLine($"Connected to WebSocket for chatroom: {chatroomNumber}");
+        //Console.WriteLine($"Connected to chatroom: {chatroomNumber}");
 
         await SubscribeToChannelsAsync(chatroomNumber);
 
@@ -54,11 +68,8 @@ public class KickChatSpy
         Console.WriteLine("Disconnected from chatroom.");
     }
 
-    private async Task SubscribeToChannelsAsync(long? chatroomNumber)
+    private async Task SubscribeToChannelsAsync(long chatroomNumber)
     {
-        if (!chatroomNumber.HasValue)
-            throw new ArgumentException("Invalid chatroom number.", nameof(chatroomNumber));
-
         string[] channels =
         [
             $"chatroom_{chatroomNumber}",
@@ -81,24 +92,36 @@ public class KickChatSpy
             var buffer = new ArraySegment<byte>(Encoding.UTF8.GetBytes(json));
 
             await _ws.SendAsync(buffer, WebSocketMessageType.Text, true, _cts!.Token);
-            Console.WriteLine($"Subscribed to: {channel}");
+            //Console.WriteLine($"Subscribed to: {channel}");
         }
     }
 
     private async Task StartReceivingMessagesAsync(CancellationToken cancellationToken)
     {
         var buffer = new byte[8192];
+        var sb = new StringBuilder(); 
 
         while (!cancellationToken.IsCancellationRequested && _ws?.State == WebSocketState.Open)
         {
             try
             {
-                var result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                sb.Clear();
+                WebSocketReceiveResult result;
+
+                do
+                {
+                    result = await _ws.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                    if (result.MessageType == WebSocketMessageType.Close)
+                        break;
+
+                    sb.Append(Encoding.UTF8.GetString(buffer, 0, result.Count));
+                }
+                while (!result.EndOfMessage);
 
                 if (result.MessageType == WebSocketMessageType.Close)
                     break;
 
-                var json = Encoding.UTF8.GetString(buffer, 0, result.Count);
+                var json = sb.ToString();
 
                 var pusherMsg = JsonSerializer.Deserialize<PusherMessage>(json);
                 if (pusherMsg?.Event?.Contains("ChatMessageEvent") == true)
@@ -110,9 +133,9 @@ public class KickChatSpy
                     }
                 }
             }
-            catch (JsonException ex)
+            catch (JsonException)
             {
-                Console.WriteLine($"[JSON] {ex.Message}");
+                //Console.WriteLine($"[JSON] {ex.Message}");
             }
             catch (Exception ex)
             {

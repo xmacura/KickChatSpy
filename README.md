@@ -12,6 +12,8 @@ dotnet add package KickChatSpy
 
 ## Example
 
+Subscribe by channel name:
+
 ```csharp
 var kickChat = new KickChatSpy();
 
@@ -20,7 +22,14 @@ kickChat.OnMessageReceived += (msg) =>
     Console.WriteLine($"[{msg.CreatedAt:T}] {msg.Sender.Username}: {msg.Content}");
 };
 
-var chatroomId = 692373; 
+var channelname = "chrimsie";
+await kickChat.ConnectToChatroomAsync(channelname);
+```
+
+Or subscribe directly by chatroom ID:
+
+```csharp
+var chatroomId = 692373;
 await kickChat.ConnectToChatroomAsync(chatroomId);
 ```
 

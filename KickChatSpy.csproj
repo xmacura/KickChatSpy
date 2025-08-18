@@ -6,7 +6,7 @@
 
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>KickChatSpy</PackageId>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Authors>xmacura</Authors>
     <Description>
     KickChatSpy is a lightweight C# library for listening to live chat messages from Kick.com via a WebSocket connection. It provides a simple interface for connecting, receiving, and handling real-time chat events, making it easy to integrate Kick chat functionality into your .NET applications.
