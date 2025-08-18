@@ -15,6 +15,8 @@ dotnet add package KickChatSpy
 Subscribe by channel name:
 
 ```csharp
+using KickChatSpy;
+
 var kickChat = new KickChatClient();
 
 kickChat.OnMessageReceived += (msg) =>
