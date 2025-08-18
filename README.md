@@ -19,13 +19,29 @@ using KickChatSpy;
 
 var kickChat = new KickChatClient();
 
-kickChat.OnMessageReceived += (msg) =>
+kickChat.OnMessageReceived += msg =>
 {
-    Console.WriteLine($"[{msg.CreatedAt:T}] {msg.Sender.Username}: {msg.Content}");
+    if (IsModerator(msg.Sender))
+    {
+        Console.WriteLine($"[{msg.CreatedAt:T}][Mod] {msg.Sender.Username}: {msg.Content}");
+    }
+    else
+    {
+        Console.WriteLine($"[{msg.CreatedAt:T}] {msg.Sender.Username}: {msg.Content}");
+    }
 };
 
 var channelname = "chrimsie";
 await kickChat.ConnectToChatroomAsync(channelname);
+
+bool IsModerator(Sender sender)
+{
+    if (sender?.Identity?.Badges == null)
+        return false;
+
+    return sender.Identity.Badges
+        .Any(b => string.Equals(b.Type, "moderator", StringComparison.OrdinalIgnoreCase));
+}
 ```
 
 Or subscribe directly by chatroom ID:
