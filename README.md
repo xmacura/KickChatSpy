@@ -19,6 +19,9 @@ using KickChatSpy;
 
 var kickChat = new KickChatClient();
 
+var channelname = "chrimsie";
+await kickChat.ConnectToChatroomAsync(channelname);
+
 kickChat.OnMessageReceived += msg =>
 {
     if (IsModerator(msg.Sender))
@@ -30,9 +33,6 @@ kickChat.OnMessageReceived += msg =>
         Console.WriteLine($"[{msg.CreatedAt:T}] {msg.Sender.Username}: {msg.Content}");
     }
 };
-
-var channelname = "chrimsie";
-await kickChat.ConnectToChatroomAsync(channelname);
 
 bool IsModerator(Sender sender)
 {
